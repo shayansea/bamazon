@@ -33,63 +33,101 @@ function start() {
             console.log("Item ID:" + results[i].item_id + " | Product Name: " + results[i].product_name + " |  Price: " + results[i].price)
 
         }
-    })
-    inquirer.prompt([
-        {
-            name: "userID",
-            type: "input",
+        inquirer.prompt([
+            {
+                name: "userID",
+                type: "input",
 
-            validate: function (value) {
-                if (isNaN(value) === false) {
-                    return true;
-                }
-                return false;
+                validate: function (value) {
+                    if (isNaN(value) === false) {
+                        return true;
+                    }
+                    return false;
+                },
+
+                message: "Enter the Product ID# of the product you want, please."
             },
+            {
+                name: "userQuantity",
+                type: "input",
+                validate: function (value) {
+                    if (isNaN(value) === false) {
+                        return true;
+                    }
+                    return false;
+                },
+                message: "How many units would you like?"
+            }
+        ]).then(function (answer) {
 
-            message: "Enter the Product ID# of the product you want, please."
-        },
-        {
-            name: "userQuantity",
-            type: "input",
-            validate: function (value) {
-                if (isNaN(value) === false) {
-                    return true;
+            var userID = parseInt(answer.userID);
+            var validID = false;
+            var validQuantity = false;
+            var updatedInventory = 0;
+            var userQuantity = parseInt(answer.userQuantity);
+            var productName = "";
+            var productPrice = 0;
+            for (var i = 0; i < results.length; i++) {                
+
+                if (results[i].item_id === userID) {
+                    validID = true;
+    
+                    if (results[i].stock_quantity >= userQuantity) {
+                        validQuantity = true;
+                        updatedInventory = results[i].stock_quantity - userQuantity
+            productName = results[i].product_name;
+            productPrice = results[i].price;
+
+                    }
+
                 }
-                return false;
-            },
-            message: "How many units would you like?"
-        }
-    ]).then(function (answer) {
-        console.log(answer);
-        var userID = parseInt(answer.userID);
-        var validID = false;
-        var validQuantity = false;
-        var updatedInventory = 0;
-        var userQuantity = parseInt(answer.userQuantity);
-        for (var i = 0; i < currentInventory.length; i++) {
-            if (currentInventory[i].item_id === userID) {
-                validID = true;
-
-
+                // checking if the value entered is valid
+                
             }
-            // checking if the value entered is valid
-            if (currentInventory[i].stock_quantity <= userQuantity) {
-                validQuantity = true;
-                updatedInventory = currentInventory[i].stock_quantity - userQuantity
+            console.log(validID, validQuantity);
+            if (validID && validQuantity) {
+                console.log("validID" + "validQuantity")
+                unpdatedInv(updatedInventory, userID, userQuantity, productName, productPrice);
 
+
+            } else {
+                console.log("Please enter valid info");
+                
+                start();
             }
-        }
-        if (validID && validQuantity) {
-            console.log("validID" + "validQuantity")
-            
-            
 
-        } else{
-            console.log("invalidID" + "invalidQuantity")
-        }
+        })
     })
+
 }
 
+function unpdatedInv(newInventory, ID, quantity, name, price) {
+
+    connection.query(
+        "UPDATE products SET ? WHERE ?",
+        [
+          {
+            stock_quantity: newInventory
+          },
+          {
+            item_id: ID
+          }
+        ],
+        function(error) {
+          if (error) throw err;
+          console.log("Inventory Updated!");
+          displayTotal(quantity, name, price)
+        }
+      );
+
+}
+
+function displayTotal(quantity, name, price) {
+    var grandTotal = quantity * price;
+    console.log("Your order total is: $" + grandTotal);
+    console.log("Product name: " + name);
+    
+}
 // create function to update inventory
 // then create function to display the updated total
 
